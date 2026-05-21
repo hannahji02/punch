@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>친구 격투 - HOMIE FIGHTER</title>
+<!--
+═══════════════════════════════════════════════════════════
+  🥊 친구 격투 게임 - 설정 가이드 (5단계)
+═══════════════════════════════════════════════════════════
+  1. 같은 폴더에 캐릭터 이미지 4장 두기 (선택사항, 없으면 도형으로 표시)
+     파일명: char_빡규.png, char_효구.png, char_충히.png, char_덩학.png
+     권장: 투명배경 PNG, 300x400px
+
+  2. 구글시트 새로 만들고, 시트탭 이름을 "matches"로 변경
+
+  3. 확장프로그램 > Apps Script 열기 → apps_script.gs 내용 전체 붙여넣기
+
+  4. 배포 > 새 배포 > 웹앱 > 액세스: 모든 사용자 → URL 복사
+
+  5. 아래 SHEET_URL 값을 복사한 URL로 교체 ↓↓↓
+═══════════════════════════════════════════════════════════
+-->
+<script>
+  // ⚠️ 여기에 Apps Script 웹앱 URL 붙여넣기 (안 넣으면 랭킹만 로컬 저장)
+  const SHEET_URL = "";
+</script>
+
+<style>
+  :root {
+    --bg-1: #0a0612;
+    --bg-2: #1a0a2e;
+    --neon-pink: #ff2e88;
+    --neon-cyan: #00f0ff;
+    --neon-yellow: #ffd60a;
+    --neon-purple: #b537f2;
+    --text: #f5f0ff;
+    --text-dim: #8a7ca8;
+    --danger: #ff3860;
+    --success: #2ee59d;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  @font-face {
+    font-family: 'PixelFont';
+    src: local('Press Start 2P'), local('Courier New');
+  }
+
+  html, body {
+    height: 100%;
+    overflow: hidden;
+    font-family: 'Press Start 2P', 'Courier New', monospace;
+    background: var(--bg-1);
+    color: var(--text);
+    user-select: none;
+    touch-action: manipulation;
+  }
+
+  body {
+    background:
+      radial-gradient(ellipse at 20% 10%, rgba(181, 55, 242, 0.25), transparent 50%),
+      radial-gradient(ellipse at 80% 90%, rgba(255, 46, 136, 0.2), transparent 50%),
+      linear-gradient(180deg, var(--bg-1) 0%, var(--bg-2) 100%);
+    background-attachment: fixed;
+    position: relative;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255, 46, 136, 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 240, 255, 0.04) 1px, transparent 1px);
+    background-size: 30px 30px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  #app {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    height: 100vh;
+    max-width: 500px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .screen {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  .screen.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  h1.title {
+    font-size: 28px;
+    text-align: center;
+    margin: 24px 0 8px;
+    color: var(--neon-pink);
+    text-shadow:
+      0 0 10px var(--neon-pink),
+      0 0 20px var(--neon-pink),
+      3px 3px 0 var(--neon-cyan);
+    letter-spacing: 2px;
+    line-height: 1.3;
+  }
+
+  .subtitle {
+    text-align: center;
+    color: var(--neon-cyan);
+    font-size: 11px;
+    margin-bottom: 20px;
+    letter-spacing: 1px;
+  }
+
+  .char-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    padding: 8px;
+  }
+
+  .char-card {
+    aspect-ratio: 3/4;
+    background: linear-gradient(135deg, rgba(255, 46, 136, 0.12), rgba(0, 240, 255, 0.08));
+    border: 2px solid var(--text-dim);
+    border-radius: 14px;
+    padding: 10px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .char-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent 60%, rgba(255, 255, 255, 0.08) 100%);
+    pointer-events: none;
+  }
+
+  .char-card:active {
+    transform: scale(0.96);
+    border-color: var(--neon-pink);
+    box-shadow: 0 0 20px var(--neon-pink);
+  }
+
+  .char-card.disabled {
+    opacity: 0.3;
+    pointer-events: none;
+  }
+
+  .char-portrait {
+    width: 100%;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 4px 0;
+  }
+
+  .char-portrait img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    image-rendering: pixelated;
+  }
+
+  .char-portrait .placeholder {
+    width: 80px;
+    height: 100px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    font-weight: bold;
+    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.4);
+  }
+
+  .char-name {
+    font-size: 14px;
+    color: var(--neon-yellow);
+    margin-top: 4px;
+    text-shadow: 2px 2px 0 #000;
+  }
+
+  .char-style {
+    font-size: 8px;
+    color: var(--text-dim);
+    margin-top: 2px;
+    letter-spacing: 1px;
+  }
+
+  .char-stats {
+    display: flex;
+    gap: 4px;
+    margin-top: 6px;
+    font-size: 8px;
+  }
+  .char-stats span {
+    background: rgba(0, 0, 0, 0.4);
+    padding: 2px 5px;
+    border-radius: 4px;
+    color: var(--neon-cyan);
+  }
+
+  /* ─── 전투 화면 ─── */
+  #screen-fight {
+    padding: 12px;
+  }
+
+  .hp-bars {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .hp-box {
+    flex: 1;
+  }
+
+  .hp-name {
+    font-size: 10px;
+    color: var(--neon-yellow);
+    margin-bottom: 4px;
+    text-shadow: 1px 1px 0 #000;
+  }
+  .hp-box.right .hp-name { text-align: right; }
+
+  .hp-bar {
+    height: 14px;
+    background: #220a30;
+    border: 2px solid var(--text-dim);
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .hp-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--success), var(--neon-yellow), var(--danger));
+    background-size: 200px 100%;
+    transition: width 0.3s;
+  }
+  .hp-box.right .hp-fill {
+    float: right;
+  }
+
+  .arena {
+    flex: 1;
+    background:
+      linear-gradient(180deg, transparent 0%, transparent 65%, rgba(0,0,0,0.5) 65%, rgba(0,0,0,0.7) 100%),
+      radial-gradient(ellipse at center bottom, rgba(255, 214, 10, 0.15), transparent 60%);
+    border: 2px solid var(--neon-purple);
+    border-radius: 8px;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 12px;
+  }
+
+  .arena::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 35%;
+    background:
+      repeating-linear-gradient(90deg,
+        rgba(255, 46, 136, 0.1) 0px,
+        rgba(255, 46, 136, 0.1) 2px,
+        transparent 2px,
+        transparent 12px);
+  }
+
+  .fighter {
+    position: absolute;
+    bottom: 12%;
+    width: 110px;
+    height: 140px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    transition: transform 0.1s;
+  }
+  .fighter img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    image-rendering: pixelated;
+  }
+  .fighter .placeholder {
+    width: 80px;
+    height: 110px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    color: #fff;
+    text-shadow: 2px 2px 0 #000;
+    box-shadow: 0 6px 0 rgba(0, 0, 0, 0.5);
+  }
+
+  .fighter-left {
+    left: 8%;
+  }
+  .fighter-right {
+    right: 8%;
+    transform: scaleX(-1);
+  }
+  .fighter-right .placeholder { transform: scaleX(-1); }
+
+  .fighter.punch-anim {
+    animation: punchMove 0.3s ease-out;
+  }
+  .fighter-right.punch-anim {
+    animation: punchMoveRight 0.3s ease-out;
+  }
+  @keyframes punchMove {
+    0%, 100% { transform: translateX(0); }
+    50% { transform: translateX(40px); }
+  }
+  @keyframes punchMoveRight {
+    0%, 100% { transform: scaleX(-1) translateX(0); }
+    50% { transform: scaleX(-1) translateX(40px); }
+  }
+
+  .fighter.hit-anim {
+    animation: hitShake 0.3s;
+  }
+  @keyframes hitShake {
+    0%, 100% { filter: none; }
+    20%, 60% { filter: hue-rotate(320deg) brightness(2); transform: translateX(-8px); }
+    40%, 80% { filter: hue-rotate(320deg) brightness(2); transform: translateX(8px); }
+  }
+  .fighter-right.hit-anim {
+    animation: hitShakeRight 0.3s;
+  }
+  @keyframes hitShakeRight {
+    0%, 100% { transform: scaleX(-1) translateX(0); filter: none; }
+    20%, 60% { filter: hue-rotate(320deg) brightness(2); transform: scaleX(-1) translateX(-8px); }
+    40%, 80% { filter: hue-rotate(320deg) brightness(2); transform: scaleX(-1) translateX(8px); }
+  }
+
+  .damage-pop {
+    position: absolute;
+    font-size: 22px;
+    font-weight: bold;
+    color: var(--neon-yellow);
+    text-shadow: 2px 2px 0 var(--danger), 0 0 10px var(--danger);
+    pointer-events: none;
+    animation: damagePop 0.8s ease-out forwards;
+    z-index: 10;
+  }
+  @keyframes damagePop {
+    0% { transform: translateY(0) scale(0.5); opacity: 0; }
+    20% { transform: translateY(-20px) scale(1.2); opacity: 1; }
+    100% { transform: translateY(-60px) scale(1); opacity: 0; }
+  }
+
+  .countdown {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 80px;
+    color: var(--neon-pink);
+    text-shadow: 0 0 30px var(--neon-pink), 4px 4px 0 var(--neon-cyan);
+    z-index: 20;
+    animation: countdownPulse 1s;
+  }
+  @keyframes countdownPulse {
+    0% { transform: scale(2); opacity: 0; }
+    20% { transform: scale(1); opacity: 1; }
+    80% { transform: scale(1); opacity: 1; }
+    100% { transform: scale(0.5); opacity: 0; }
+  }
+
+  .ko-text {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 64px;
+    color: var(--neon-yellow);
+    text-shadow:
+      0 0 20px var(--neon-pink),
+      4px 4px 0 var(--danger);
+    z-index: 20;
+    animation: koSlam 0.6s ease-out forwards;
+    letter-spacing: 6px;
+  }
+  @keyframes koSlam {
+    0% { transform: scale(3) rotate(-20deg); opacity: 0; }
+    60% { transform: scale(0.9) rotate(0deg); opacity: 1; }
+    100% { transform: scale(1) rotate(0deg); opacity: 1; }
+  }
+
+  .punch-btn {
+    height: 80px;
+    background: linear-gradient(180deg, var(--neon-pink), #c91269);
+    border: 3px solid var(--neon-yellow);
+    border-radius: 12px;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 22px;
+    letter-spacing: 4px;
+    cursor: pointer;
+    box-shadow: 0 6px 0 #5a0625, 0 0 20px rgba(255, 46, 136, 0.6);
+    transition: all 0.05s;
+  }
+  .punch-btn:active:not(:disabled) {
+    transform: translateY(4px);
+    box-shadow: 0 2px 0 #5a0625;
+  }
+  .punch-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  /* ─── 결과 화면 ─── */
+  .result-big {
+    font-size: 56px;
+    text-align: center;
+    margin: 30px 0 16px;
+    letter-spacing: 8px;
+  }
+  .result-big.win { color: var(--success); text-shadow: 0 0 20px var(--success), 3px 3px 0 #000; }
+  .result-big.lose { color: var(--danger); text-shadow: 0 0 20px var(--danger), 3px 3px 0 #000; }
+
+  .result-info {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 14px;
+    line-height: 2;
+  }
+  .streak-badge {
+    display: inline-block;
+    background: var(--neon-yellow);
+    color: #000;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 12px;
+    margin-top: 8px;
+    animation: streakPulse 0.6s ease-out;
+  }
+  @keyframes streakPulse {
+    0% { transform: scale(0) rotate(-180deg); }
+    100% { transform: scale(1) rotate(0deg); }
+  }
+
+  .btn-row {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: auto;
+    padding: 16px 0;
+  }
+
+  .btn {
+    height: 54px;
+    background: transparent;
+    border: 2px solid var(--neon-cyan);
+    border-radius: 8px;
+    color: var(--neon-cyan);
+    font-family: inherit;
+    font-size: 14px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn:active {
+    background: var(--neon-cyan);
+    color: var(--bg-1);
+    transform: scale(0.97);
+  }
+  .btn.primary {
+    border-color: var(--neon-pink);
+    color: var(--neon-pink);
+  }
+  .btn.primary:active {
+    background: var(--neon-pink);
+    color: #fff;
+  }
+
+  /* ─── 랭킹 ─── */
+  .rank-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 4px;
+  }
+  .rank-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px;
+    background: linear-gradient(90deg, rgba(255, 46, 136, 0.08), transparent);
+    border: 1px solid var(--text-dim);
+    border-radius: 8px;
+    margin-bottom: 8px;
+  }
+  .rank-row.gold {
+    border-color: var(--neon-yellow);
+    background: linear-gradient(90deg, rgba(255, 214, 10, 0.18), transparent);
+    box-shadow: 0 0 20px rgba(255, 214, 10, 0.3);
+  }
+  .rank-row.silver { border-color: #c0c0c0; }
+  .rank-row.bronze { border-color: #cd7f32; }
+
+  .rank-position {
+    font-size: 20px;
+    width: 40px;
+    text-align: center;
+    color: var(--neon-yellow);
+  }
+  .rank-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .rank-avatar img {
+    width: 100%; height: 100%; object-fit: cover; border-radius: 8px;
+  }
+  .rank-info {
+    flex: 1;
+    font-size: 14px;
+  }
+  .rank-info small {
+    display: block;
+    color: var(--text-dim);
+    font-size: 9px;
+    margin-top: 4px;
+  }
+  .rank-wins {
+    font-size: 22px;
+    color: var(--neon-pink);
+    text-shadow: 0 0 8px var(--neon-pink);
+  }
+  .rank-wins small {
+    font-size: 9px;
+    color: var(--text-dim);
+    display: block;
+    text-align: right;
+  }
+
+  /* ─── 토스트 ─── */
+  .toast {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.9);
+    border: 2px solid var(--danger);
+    padding: 12px 20px;
+    border-radius: 8px;
+    color: var(--danger);
+    font-size: 11px;
+    z-index: 100;
+    animation: toastIn 0.3s;
+  }
+  @keyframes toastIn {
+    from { transform: translate(-50%, -40px); opacity: 0; }
+    to { transform: translate(-50%, 0); opacity: 1; }
+  }
+
+  .top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .back-btn {
+    background: none;
+    border: none;
+    color: var(--neon-cyan);
+    font-family: inherit;
+    font-size: 14px;
+    cursor: pointer;
+    padding: 8px;
+  }
+
+  .vs-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding: 16px 0;
+    margin-bottom: 12px;
+  }
+  .vs-name {
+    font-size: 18px;
+    color: var(--neon-yellow);
+    text-shadow: 2px 2px 0 #000;
+  }
+  .vs-text {
+    font-size: 28px;
+    color: var(--neon-pink);
+    text-shadow: 0 0 15px var(--neon-pink);
+  }
+
+  .match-count {
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 9px;
+    margin-top: 4px;
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ─── 화면 1: 캐릭터 선택 (나) ─── -->
+  <section id="screen-pick-self" class="screen active">
+    <h1 class="title">HOMIE<br>FIGHTER</h1>
+    <p class="subtitle">▸ 네 캐릭터를 골라라 ◂</p>
+    <div class="char-grid" id="grid-self"></div>
+    <button class="btn" style="margin-top:12px" onclick="goto('screen-ranking'); renderRanking()">🏆 랭킹 보기</button>
+  </section>
+
+  <!-- ─── 화면 2: 상대 선택 ─── -->
+  <section id="screen-pick-opponent" class="screen">
+    <div class="top-bar">
+      <button class="back-btn" onclick="goto('screen-pick-self')">◂ 뒤로</button>
+      <span style="font-size:10px;color:var(--text-dim)" id="self-label"></span>
+    </div>
+    <p class="subtitle">▸ 누구랑 붙을래? ◂</p>
+    <div class="char-grid" id="grid-opponent"></div>
+  </section>
+
+  <!-- ─── 화면 3: 전투 ─── -->
+  <section id="screen-fight" class="screen">
+    <div class="hp-bars">
+      <div class="hp-box left">
+        <div class="hp-name" id="hp-name-left">-</div>
+        <div class="hp-bar"><div class="hp-fill" id="hp-fill-left" style="width:100%"></div></div>
+      </div>
+      <div class="hp-box right">
+        <div class="hp-name" id="hp-name-right">-</div>
+        <div class="hp-bar"><div class="hp-fill" id="hp-fill-right" style="width:100%"></div></div>
+      </div>
+    </div>
+    <div class="arena" id="arena">
+      <div class="fighter fighter-left" id="fighter-left"></div>
+      <div class="fighter fighter-right" id="fighter-right"></div>
+    </div>
+    <button class="punch-btn" id="punch-btn" onclick="playerPunch()">🥊 PUNCH</button>
+  </section>
+
+  <!-- ─── 화면 4: 결과 ─── -->
+  <section id="screen-result" class="screen">
+    <div class="result-big" id="result-text">-</div>
+    <div class="result-info" id="result-info"></div>
+    <div class="btn-row">
+      <button class="btn primary" onclick="goto('screen-pick-self'); resetState()">다시 시작</button>
+      <button class="btn" onclick="goto('screen-ranking'); renderRanking()">🏆 랭킹 보기</button>
+    </div>
+  </section>
+
+  <!-- ─── 화면 5: 랭킹 ─── -->
+  <section id="screen-ranking" class="screen">
+    <div class="top-bar">
+      <button class="back-btn" onclick="goto('screen-pick-self')">◂ 메인</button>
+      <span style="font-size:10px;color:var(--text-dim)" id="ranking-status">로딩 중...</span>
+    </div>
+    <h1 class="title" style="font-size:22px;margin:8px 0">🏆 RANKING</h1>
+    <div class="rank-list" id="rank-list"></div>
+  </section>
+
+</div>
+
+<script>
+// ════════════════════════════════════════════════
+//  데이터 정의
+// ════════════════════════════════════════════════
+const CHARACTERS = [
+  { id: '빡규', name: '빡규', gender: 'M', style: '강타형',  attack: 12, cooldown: 700, color: '#ff2e88', emoji: '😤' },
+  { id: '효구', name: '효구', gender: 'F', style: '속사형',  attack: 8,  cooldown: 350, color: '#00f0ff', emoji: '😎' },
+  { id: '충히', name: '충히', gender: 'F', style: '밸런스',  attack: 10, cooldown: 500, color: '#ffd60a', emoji: '🙂' },
+  { id: '덩학', name: '덩학', gender: 'M', style: '한방형',  attack: 14, cooldown: 900, color: '#b537f2', emoji: '😈' },
+];
+const HP_MAX = 100;
+const DAILY_MATCH_LIMIT = 3;
+
+let state = {
+  self: null,
+  opponent: null,
+  selfHP: HP_MAX,
+  oppHP: HP_MAX,
+  selfCooldown: false,
+  oppTimer: null,
+  battleStarted: false,
+  battleEnded: false,
+};
+
+// ════════════════════════════════════════════════
+//  유틸: 화면 전환
+// ════════════════════════════════════════════════
+function goto(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function toast(msg) {
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 2200);
+}
+
+// ════════════════════════════════════════════════
+//  캐릭터 카드 렌더링
+// ════════════════════════════════════════════════
+function makeCharCard(char, onClick, disabled = false) {
+  const card = document.createElement('div');
+  card.className = 'char-card' + (disabled ? ' disabled' : '');
+
+  const portrait = document.createElement('div');
+  portrait.className = 'char-portrait';
+
+  // 이미지가 있으면 표시, 없으면 도형 플레이스홀더
+  const img = new Image();
+  img.src = `char_${char.id}.png`;
+  img.onload = () => portrait.replaceChildren(img);
+  img.onerror = () => {}; // 그대로 도형 유지
+
+  const placeholder = document.createElement('div');
+  placeholder.className = 'placeholder';
+  placeholder.style.background = `linear-gradient(135deg, ${char.color}, ${char.color}88)`;
+  placeholder.textContent = char.emoji;
+  portrait.appendChild(placeholder);
+
+  const name = document.createElement('div');
+  name.className = 'char-name';
+  name.textContent = char.name;
+
+  const style = document.createElement('div');
+  style.className = 'char-style';
+  style.textContent = char.style;
+
+  const stats = document.createElement('div');
+  stats.className = 'char-stats';
+  stats.innerHTML = `<span>ATK ${char.attack}</span><span>SPD ${(1000/char.cooldown).toFixed(1)}</span>`;
+
+  card.append(portrait, name, style, stats);
+  if (!disabled) card.onclick = () => onClick(char);
+  return card;
+}
+
+function renderSelfGrid() {
+  const grid = document.getElementById('grid-self');
+  grid.innerHTML = '';
+  CHARACTERS.forEach(c => grid.appendChild(makeCharCard(c, pickSelf)));
+}
+
+function renderOpponentGrid() {
+  const grid = document.getElementById('grid-opponent');
+  grid.innerHTML = '';
+  CHARACTERS.forEach(c => {
+    const isSelf = c.id === state.self.id;
+    const overLimit = matchCountToday(state.self.id, c.id) >= DAILY_MATCH_LIMIT;
+    grid.appendChild(makeCharCard(c, pickOpponent, isSelf || overLimit));
+  });
+  document.getElementById('self-label').textContent = `나: ${state.self.name}`;
+}
+
+function makeFighterEl(char, side) {
+  const wrap = document.getElementById(side === 'left' ? 'fighter-left' : 'fighter-right');
+  wrap.innerHTML = '';
+  const img = new Image();
+  img.src = `char_${char.id}.png`;
+  img.onload = () => wrap.replaceChildren(img);
+  img.onerror = () => {};
+  const ph = document.createElement('div');
+  ph.className = 'placeholder';
+  ph.style.background = `linear-gradient(135deg, ${char.color}, ${char.color}88)`;
+  ph.textContent = char.emoji;
+  wrap.appendChild(ph);
+}
+
+// ════════════════════════════════════════════════
+//  선택 흐름
+// ════════════════════════════════════════════════
+function pickSelf(char) {
+  state.self = char;
+  goto('screen-pick-opponent');
+  renderOpponentGrid();
+}
+
+function pickOpponent(char) {
+  state.opponent = char;
+  recordMatchAttempt(state.self.id, char.id);
+  startFight();
+}
+
+// ════════════════════════════════════════════════
+//  전투 로직
+// ════════════════════════════════════════════════
+function startFight() {
+  state.selfHP = HP_MAX;
+  state.oppHP = HP_MAX;
+  state.selfCooldown = false;
+  state.battleStarted = false;
+  state.battleEnded = false;
+  goto('screen-fight');
+
+  document.getElementById('hp-name-left').textContent = state.self.name;
+  document.getElementById('hp-name-right').textContent = state.opponent.name;
+  updateHPBar();
+  makeFighterEl(state.self, 'left');
+  makeFighterEl(state.opponent, 'right');
+
+  // 카운트다운
+  showCountdown(3, () => {
+    state.battleStarted = true;
+    scheduleBotAttack();
+  });
+
+  document.getElementById('punch-btn').disabled = false;
+}
+
+function showCountdown(n, done) {
+  const arena = document.getElementById('arena');
+  const el = document.createElement('div');
+  el.className = 'countdown';
+  el.textContent = n === 0 ? 'FIGHT!' : n;
+  arena.appendChild(el);
+  setTimeout(() => el.remove(), 950);
+  if (n > 0) setTimeout(() => showCountdown(n - 1, done), 1000);
+  else setTimeout(done, 600);
+}
+
+function updateHPBar() {
+  document.getElementById('hp-fill-left').style.width = Math.max(0, state.selfHP) + '%';
+  document.getElementById('hp-fill-right').style.width = Math.max(0, state.oppHP) + '%';
+}
+
+function playerPunch() {
+  if (!state.battleStarted || state.battleEnded || state.selfCooldown) return;
+  state.selfCooldown = true;
+  document.getElementById('punch-btn').disabled = true;
+
+  const fl = document.getElementById('fighter-left');
+  fl.classList.add('punch-anim');
+  setTimeout(() => fl.classList.remove('punch-anim'), 300);
+
+  setTimeout(() => {
+    if (state.battleEnded) return;
+    const dmg = state.self.attack;
+    state.oppHP -= dmg;
+    showDamage('right', dmg);
+    const fr = document.getElementById('fighter-right');
+    fr.classList.add('hit-anim');
+    setTimeout(() => fr.classList.remove('hit-anim'), 300);
+    updateHPBar();
+    checkEnd();
+  }, 150);
+
+  setTimeout(() => {
+    state.selfCooldown = false;
+    if (!state.battleEnded) document.getElementById('punch-btn').disabled = false;
+  }, state.self.cooldown);
+}
+
+function scheduleBotAttack() {
+  if (state.battleEnded) return;
+  const interval = state.opponent.cooldown * (0.85 + Math.random() * 0.3); // ±15% 랜덤
+  state.oppTimer = setTimeout(() => {
+    if (state.battleEnded) return;
+    botPunch();
+    scheduleBotAttack();
+  }, interval);
+}
+
+function botPunch() {
+  if (state.battleEnded) return;
+  const fr = document.getElementById('fighter-right');
+  fr.classList.add('punch-anim');
+  setTimeout(() => fr.classList.remove('punch-anim'), 300);
+
+  setTimeout(() => {
+    if (state.battleEnded) return;
+    const dmg = state.opponent.attack;
+    state.selfHP -= dmg;
+    showDamage('left', dmg);
+    const fl = document.getElementById('fighter-left');
+    fl.classList.add('hit-anim');
+    setTimeout(() => fl.classList.remove('hit-anim'), 300);
+    updateHPBar();
+    checkEnd();
+  }, 150);
+}
+
+function showDamage(side, dmg) {
+  const arena = document.getElementById('arena');
+  const el = document.createElement('div');
+  el.className = 'damage-pop';
+  el.textContent = '-' + dmg;
+  el.style[side === 'left' ? 'left' : 'right'] = '15%';
+  el.style.top = '40%';
+  arena.appendChild(el);
+  setTimeout(() => el.remove(), 800);
+}
+
+function checkEnd() {
+  if (state.battleEnded) return;
+  if (state.selfHP <= 0 || state.oppHP <= 0) {
+    state.battleEnded = true;
+    if (state.oppTimer) clearTimeout(state.oppTimer);
+    document.getElementById('punch-btn').disabled = true;
+    const playerWon = state.selfHP > 0;
+    showKO(playerWon);
+  }
+}
+
+function showKO(playerWon) {
+  const arena = document.getElementById('arena');
+  const el = document.createElement('div');
+  el.className = 'ko-text';
+  el.textContent = 'K.O.';
+  arena.appendChild(el);
+
+  setTimeout(() => {
+    finishMatch(playerWon);
+  }, 1800);
+}
+
+// ════════════════════════════════════════════════
+//  매치 기록 / 연승 / 제한
+// ════════════════════════════════════════════════
+function todayKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+}
+
+function matchCountToday(selfId, oppId) {
+  const key = `match_${todayKey()}_${selfId}_${oppId}`;
+  return parseInt(localStorage.getItem(key) || '0', 10);
+}
+
+function recordMatchAttempt(selfId, oppId) {
+  const key = `match_${todayKey()}_${selfId}_${oppId}`;
+  localStorage.setItem(key, matchCountToday(selfId, oppId) + 1);
+}
+
+function getStreak(charId) {
+  return JSON.parse(localStorage.getItem('streak_' + charId) || '{"count":0,"lastOpp":null}');
+}
+function setStreak(charId, data) {
+  localStorage.setItem('streak_' + charId, JSON.stringify(data));
+}
+
+function calcStreakBonus(count) {
+  if (count >= 5) return 3;
+  if (count >= 3) return 2;
+  if (count >= 2) return 1;
+  return 0;
+}
+
+function finishMatch(playerWon) {
+  const winner = playerWon ? state.self : state.opponent;
+  const loser  = playerWon ? state.opponent : state.self;
+
+  let bonus = 0;
+  let streakCount = 0;
+
+  if (playerWon) {
+    // 승리한 캐릭터(winner)의 연승 갱신: 같은 상대 연속 승리는 무효
+    const s = getStreak(winner.id);
+    if (s.lastOpp === loser.id) {
+      // 같은 상대 - 연승 카운트 유지(증가 X)
+      streakCount = s.count;
+    } else {
+      streakCount = s.count + 1;
+    }
+    bonus = calcStreakBonus(streakCount);
+    setStreak(winner.id, { count: streakCount, lastOpp: loser.id });
+    // 패배한 사람의 연승은 끊김
+    setStreak(loser.id, { count: 0, lastOpp: null });
+  } else {
+    // 패배한 사람(state.self)의 연승 끊김
+    setStreak(state.self.id, { count: 0, lastOpp: null });
+    // 봇(winner)의 연승도 기록 (다른 누군가가 봇이 됐을 수 있으므로)
+    const s = getStreak(winner.id);
+    if (s.lastOpp === loser.id) {
+      streakCount = s.count;
+    } else {
+      streakCount = s.count + 1;
+    }
+    bonus = calcStreakBonus(streakCount);
+    setStreak(winner.id, { count: streakCount, lastOpp: loser.id });
+  }
+
+  const totalAdded = 1 + bonus;
+  saveMatch({ winner: winner.id, loser: loser.id, streakBonus: bonus, totalAdded });
+
+  // 결과 화면
+  document.getElementById('result-text').textContent = playerWon ? 'WIN!' : 'LOSE';
+  document.getElementById('result-text').className = 'result-big ' + (playerWon ? 'win' : 'lose');
+  let info = `<strong style="color:var(--neon-yellow)">${winner.name}</strong> 승리`;
+  info += `<br><span style="font-size:11px;color:var(--text-dim)">+${totalAdded}승 적립</span>`;
+  if (bonus > 0) {
+    info += `<br><span class="streak-badge">🔥 ${streakCount}연승 보너스 +${bonus}</span>`;
+  }
+  document.getElementById('result-info').innerHTML = info;
+  goto('screen-result');
+}
+
+// ════════════════════════════════════════════════
+//  저장 (로컬 + 구글시트)
+// ════════════════════════════════════════════════
+function saveMatch(match) {
+  // 로컬 저장
+  const arr = JSON.parse(localStorage.getItem('matches') || '[]');
+  arr.push({ ...match, ts: Date.now() });
+  localStorage.setItem('matches', JSON.stringify(arr));
+
+  // 구글시트 전송 (URL 설정된 경우)
+  if (SHEET_URL) {
+    fetch(SHEET_URL, {
+      method: 'POST',
+      mode: 'no-cors', // CORS 우회 (Apps Script 단순 응답)
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({
+        winner: match.winner,
+        loser: match.loser,
+        streakBonus: match.streakBonus,
+        totalAdded: match.totalAdded,
+        ts: new Date().toISOString()
+      })
+    }).catch(() => {/* 실패해도 게임은 진행 */});
+  }
+}
+
+async function fetchRanking() {
+  // 시트 URL 있으면 시트에서, 없으면 로컬에서
+  if (SHEET_URL) {
+    try {
+      const res = await fetch(SHEET_URL + '?action=ranking');
+      const data = await res.json();
+      return data;
+    } catch (e) {
+      console.warn('시트 조회 실패, 로컬 사용', e);
+    }
+  }
+  // 로컬 집계
+  const matches = JSON.parse(localStorage.getItem('matches') || '[]');
+  const agg = {};
+  CHARACTERS.forEach(c => agg[c.id] = { wins: 0, lastWin: 0 });
+  matches.forEach(m => {
+    if (agg[m.winner]) {
+      agg[m.winner].wins += (m.totalAdded || 1);
+      if (m.ts > agg[m.winner].lastWin) agg[m.winner].lastWin = m.ts;
+    }
+  });
+  return Object.entries(agg).map(([id, v]) => ({ id, wins: v.wins, lastWin: v.lastWin }));
+}
+
+async function renderRanking() {
+  const statusEl = document.getElementById('ranking-status');
+  statusEl.textContent = '로딩 중...';
+  const data = await fetchRanking();
+  statusEl.textContent = SHEET_URL ? '시트 동기화 ✓' : '로컬 저장';
+
+  data.sort((a, b) => {
+    if (b.wins !== a.wins) return b.wins - a.wins;
+    return (b.lastWin || 0) - (a.lastWin || 0);
+  });
+
+  const list = document.getElementById('rank-list');
+  list.innerHTML = '';
+
+  data.forEach((row, i) => {
+    const char = CHARACTERS.find(c => c.id === row.id);
+    if (!char) return;
+    const div = document.createElement('div');
+    div.className = 'rank-row';
+    if (i === 0 && row.wins > 0) div.classList.add('gold');
+    else if (i === 1 && row.wins > 0) div.classList.add('silver');
+    else if (i === 2 && row.wins > 0) div.classList.add('bronze');
+
+    const medal = ['🥇','🥈','🥉'][i] || `#${i+1}`;
+    const avatar = `<div class="rank-avatar" style="background:linear-gradient(135deg,${char.color},${char.color}88)">${char.emoji}</div>`;
+
+    div.innerHTML = `
+      <div class="rank-position">${medal}</div>
+      ${avatar}
+      <div class="rank-info">
+        <strong>${char.name}</strong>
+        <small>${char.style}</small>
+      </div>
+      <div class="rank-wins">${row.wins}<small>WINS</small></div>
+    `;
+    list.appendChild(div);
+  });
+}
+
+function resetState() {
+  state.self = null;
+  state.opponent = null;
+  if (state.oppTimer) clearTimeout(state.oppTimer);
+}
+
+// ════════════════════════════════════════════════
+//  시작
+// ════════════════════════════════════════════════
+renderSelfGrid();
+</script>
+</body>
+</html>
