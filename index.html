@@ -3,50 +3,39 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>친구 격투 - HOMIE FIGHTER</title>
+<title>야차뜨기</title>
 <!--
 ═══════════════════════════════════════════════════════════
-  🥊 친구 격투 게임 - 설정 가이드 (5단계)
+  🎯 야차뜨기 - 설정 가이드
 ═══════════════════════════════════════════════════════════
-  1. 같은 폴더에 캐릭터 이미지 4장 두기 (선택사항, 없으면 도형으로 표시)
+  1. 같은 폴더에 캐릭터 이미지 4장 두기 (선택)
      파일명: char_빡규.png, char_효구.png, char_충히.png, char_덩학.png
-     권장: 투명배경 PNG, 300x400px
-
-  2. 구글시트 새로 만들고, 시트탭 이름을 "matches"로 변경
-
-  3. 확장프로그램 > Apps Script 열기 → apps_script.gs 내용 전체 붙여넣기
-
-  4. 배포 > 새 배포 > 웹앱 > 액세스: 모든 사용자 → URL 복사
-
-  5. 아래 SHEET_URL 값을 복사한 URL로 교체 ↓↓↓
+  2. 구글시트 만들고 "matches" 탭으로 이름 변경
+  3. 확장 > Apps Script > apps_script.gs 붙여넣기
+  4. 배포 > 새 배포 > 웹앱 > 모든 사용자 → URL 복사
+  5. 아래 SHEET_URL에 붙여넣기
 ═══════════════════════════════════════════════════════════
 -->
 <script>
-  // ⚠️ 여기에 Apps Script 웹앱 URL 붙여넣기 (안 넣으면 랭킹만 로컬 저장)
-  const SHEET_URL = "https://script.google.com/macros/s/AKfycbw2khRLh6aZB9ipstuKnfCHR2obzcM1ThXx4m9IuyHTirTkW13o--OBcJRkx2nc9Jz3/exec";
+  const SHEET_URL = ""; // ⚠️ Apps Script 웹앱 URL 여기에
 </script>
 
 <style>
   :root {
-    --bg-1: #0a0612;
-    --bg-2: #1a0a2e;
+    --bg-1: #1a0a2e;
+    --bg-2: #2d1b4e;
+    --card-bg: #ffffff;
+    --card-text: #1a0a2e;
     --neon-pink: #ff2e88;
     --neon-cyan: #00f0ff;
     --neon-yellow: #ffd60a;
     --neon-purple: #b537f2;
     --text: #f5f0ff;
-    --text-dim: #8a7ca8;
+    --text-dim: #a89cc8;
     --danger: #ff3860;
     --success: #2ee59d;
   }
-
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-
-  @font-face {
-    font-family: 'PixelFont';
-    src: local('Press Start 2P'), local('Courier New');
-  }
-
   html, body {
     height: 100%;
     overflow: hidden;
@@ -56,28 +45,25 @@
     user-select: none;
     touch-action: manipulation;
   }
-
   body {
     background:
-      radial-gradient(ellipse at 20% 10%, rgba(181, 55, 242, 0.25), transparent 50%),
-      radial-gradient(ellipse at 80% 90%, rgba(255, 46, 136, 0.2), transparent 50%),
+      radial-gradient(ellipse at 20% 10%, rgba(181, 55, 242, 0.4), transparent 50%),
+      radial-gradient(ellipse at 80% 90%, rgba(255, 46, 136, 0.25), transparent 50%),
       linear-gradient(180deg, var(--bg-1) 0%, var(--bg-2) 100%);
     background-attachment: fixed;
     position: relative;
   }
-
   body::before {
     content: '';
     position: fixed;
     inset: 0;
     background-image:
-      linear-gradient(rgba(255, 46, 136, 0.04) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0, 240, 255, 0.04) 1px, transparent 1px);
+      linear-gradient(rgba(255, 46, 136, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 240, 255, 0.05) 1px, transparent 1px);
     background-size: 30px 30px;
     pointer-events: none;
     z-index: 0;
   }
-
   #app {
     position: relative;
     z-index: 1;
@@ -89,453 +75,354 @@
     flex-direction: column;
     overflow: hidden;
   }
-
   .screen {
     position: absolute;
     inset: 0;
     display: flex;
     flex-direction: column;
-    padding: 16px;
+    padding: 14px;
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.3s;
+    overflow-y: auto;
   }
-  .screen.active {
-    opacity: 1;
-    pointer-events: auto;
-  }
+  .screen.active { opacity: 1; pointer-events: auto; }
 
   h1.title {
-    font-size: 28px;
+    font-size: 32px;
     text-align: center;
-    margin: 24px 0 8px;
-    color: var(--neon-pink);
-    text-shadow:
-      0 0 10px var(--neon-pink),
-      0 0 20px var(--neon-pink),
-      3px 3px 0 var(--neon-cyan);
-    letter-spacing: 2px;
-    line-height: 1.3;
+    margin: 18px 0 4px;
+    color: var(--neon-yellow);
+    text-shadow: 0 0 12px var(--neon-pink), 3px 3px 0 var(--neon-pink), -1px -1px 0 var(--neon-cyan);
+    letter-spacing: 4px;
   }
-
   .subtitle {
     text-align: center;
     color: var(--neon-cyan);
-    font-size: 11px;
-    margin-bottom: 20px;
+    font-size: 10px;
+    margin-bottom: 14px;
     letter-spacing: 1px;
   }
 
+  /* ─── 캐릭터 카드 (흰배경, 작게) ─── */
   .char-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    padding: 8px;
+    gap: 10px;
+    padding: 4px;
   }
-
   .char-card {
-    aspect-ratio: 3/4;
-    background: linear-gradient(135deg, rgba(255, 46, 136, 0.12), rgba(0, 240, 255, 0.08));
-    border: 2px solid var(--text-dim);
-    border-radius: 14px;
-    padding: 10px;
+    aspect-ratio: 4/4;
+    background: var(--card-bg);
+    border: 3px solid var(--neon-yellow);
+    border-radius: 10px;
+    padding: 8px;
     cursor: pointer;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: space-between;
-    transition: all 0.2s;
+    transition: all 0.15s;
     position: relative;
     overflow: hidden;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.3);
   }
-
-  .char-card::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, transparent 60%, rgba(255, 255, 255, 0.08) 100%);
-    pointer-events: none;
-  }
-
   .char-card:active {
-    transform: scale(0.96);
+    transform: translateY(3px);
+    box-shadow: 0 1px 0 rgba(0,0,0,0.3);
     border-color: var(--neon-pink);
-    box-shadow: 0 0 20px var(--neon-pink);
   }
-
-  .char-card.disabled {
-    opacity: 0.3;
-    pointer-events: none;
-  }
-
+  .char-card.disabled { opacity: 0.4; pointer-events: none; filter: grayscale(0.6); }
   .char-portrait {
     width: 100%;
     flex: 1;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 4px 0;
+    margin: 2px 0;
   }
-
-  .char-portrait img {
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: contain;
-    image-rendering: pixelated;
-  }
-
+  .char-portrait img { max-width: 100%; max-height: 100%; object-fit: contain; image-rendering: pixelated; }
   .char-portrait .placeholder {
-    width: 80px;
-    height: 100px;
-    border-radius: 12px;
+    width: 60px;
+    height: 70px;
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 32px;
-    font-weight: bold;
-    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.4);
+    font-size: 26px;
+    box-shadow: 0 3px 0 rgba(0, 0, 0, 0.4);
   }
+  .char-name { font-size: 13px; color: var(--card-text); margin-top: 2px; }
 
-  .char-name {
-    font-size: 14px;
-    color: var(--neon-yellow);
-    margin-top: 4px;
-    text-shadow: 2px 2px 0 #000;
-  }
-
-  .char-style {
-    font-size: 8px;
-    color: var(--text-dim);
-    margin-top: 2px;
-    letter-spacing: 1px;
-  }
-
-  .char-stats {
+  /* ─── 모드 화면 ─── */
+  .mode-card {
+    background: var(--card-bg);
+    color: var(--card-text);
+    border: 3px solid var(--neon-yellow);
+    border-radius: 12px;
+    padding: 18px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.3);
+    transition: all 0.15s;
     display: flex;
-    gap: 4px;
-    margin-top: 6px;
-    font-size: 8px;
+    align-items: center;
+    gap: 14px;
   }
-  .char-stats span {
-    background: rgba(0, 0, 0, 0.4);
-    padding: 2px 5px;
-    border-radius: 4px;
-    color: var(--neon-cyan);
+  .mode-card:active:not(.disabled) {
+    transform: translateY(3px);
+    box-shadow: 0 1px 0 rgba(0,0,0,0.3);
   }
+  .mode-card.disabled { opacity: 0.5; pointer-events: none; }
+  .mode-card.attack { border-color: var(--danger); }
+  .mode-card .mode-icon { font-size: 36px; flex-shrink: 0; }
+  .mode-card .mode-text { flex: 1; }
+  .mode-card .mode-title { font-size: 16px; margin-bottom: 6px; }
+  .mode-card .mode-sub { font-size: 9px; color: #666; line-height: 1.6; }
+  .mode-card.attack .mode-title { color: var(--danger); }
 
-  /* ─── 전투 화면 ─── */
-  #screen-fight {
-    padding: 12px;
+  .me-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(0,0,0,0.4);
+    border: 1px solid var(--text-dim);
+    padding: 8px 12px;
+    border-radius: 8px;
+    margin-bottom: 14px;
+    font-size: 10px;
   }
+  .me-bar .me-name { color: var(--neon-yellow); }
 
-  .hp-bars {
+  /* ─── 암산 화면 ─── */
+  .quiz-top {
     display: flex;
     justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 12px;
-  }
-
-  .hp-box {
-    flex: 1;
-  }
-
-  .hp-name {
+    align-items: center;
+    margin-bottom: 16px;
     font-size: 10px;
-    color: var(--neon-yellow);
-    margin-bottom: 4px;
-    text-shadow: 1px 1px 0 #000;
   }
-  .hp-box.right .hp-name { text-align: right; }
+  .quiz-top .score { color: var(--neon-yellow); font-size: 14px; }
+  .quiz-top .time { color: var(--neon-cyan); font-size: 16px; }
+  .quiz-top .time.urgent { color: var(--danger); animation: blink 0.4s infinite; }
+  @keyframes blink { 50% { opacity: 0.4; } }
 
-  .hp-bar {
-    height: 14px;
-    background: #220a30;
-    border: 2px solid var(--text-dim);
-    border-radius: 4px;
-    overflow: hidden;
-    position: relative;
-  }
-
-  .hp-fill {
-    height: 100%;
-    background: linear-gradient(90deg, var(--success), var(--neon-yellow), var(--danger));
-    background-size: 200px 100%;
-    transition: width 0.3s;
-  }
-  .hp-box.right .hp-fill {
-    float: right;
-  }
-
-  .arena {
+  .quiz-stage {
     flex: 1;
-    background:
-      linear-gradient(180deg, transparent 0%, transparent 65%, rgba(0,0,0,0.5) 65%, rgba(0,0,0,0.7) 100%),
-      radial-gradient(ellipse at center bottom, rgba(255, 214, 10, 0.15), transparent 60%);
-    border: 2px solid var(--neon-purple);
-    border-radius: 8px;
-    position: relative;
-    overflow: hidden;
-    margin-bottom: 12px;
-  }
-
-  .arena::before {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 35%;
-    background:
-      repeating-linear-gradient(90deg,
-        rgba(255, 46, 136, 0.1) 0px,
-        rgba(255, 46, 136, 0.1) 2px,
-        transparent 2px,
-        transparent 12px);
-  }
-
-  .fighter {
-    position: absolute;
-    bottom: 12%;
-    width: 110px;
-    height: 140px;
     display: flex;
-    align-items: flex-end;
-    justify-content: center;
-    transition: transform 0.1s;
-  }
-  .fighter img {
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: contain;
-    image-rendering: pixelated;
-  }
-  .fighter .placeholder {
-    width: 80px;
-    height: 110px;
-    border-radius: 12px;
-    display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    font-size: 28px;
-    color: #fff;
-    text-shadow: 2px 2px 0 #000;
-    box-shadow: 0 6px 0 rgba(0, 0, 0, 0.5);
+    gap: 18px;
   }
+  .quiz-question {
+    font-size: 40px;
+    color: var(--card-text);
+    background: var(--card-bg);
+    padding: 18px 28px;
+    border-radius: 14px;
+    box-shadow: 0 6px 0 var(--neon-pink), 0 0 30px rgba(255, 46, 136, 0.4);
+    letter-spacing: 4px;
+    min-width: 250px;
+    text-align: center;
+  }
+  .quiz-input {
+    width: 200px;
+    height: 56px;
+    line-height: 56px;
+    font-size: 30px;
+    text-align: center;
+    background: rgba(0,0,0,0.5);
+    border: 3px solid var(--neon-cyan);
+    border-radius: 10px;
+    color: var(--neon-cyan);
+    letter-spacing: 4px;
+  }
+  .quiz-input.flash-correct { animation: flashCorrect 0.3s; }
+  .quiz-input.flash-wrong { animation: flashWrong 0.3s; }
+  @keyframes flashCorrect { 50% { background: var(--success); color: #000; border-color: var(--success); } }
+  @keyframes flashWrong { 50% { background: var(--danger); color: #fff; border-color: var(--danger); } }
 
-  .fighter-left {
-    left: 8%;
+  .keypad {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    width: 100%;
+    max-width: 320px;
   }
-  .fighter-right {
-    right: 8%;
-    transform: scaleX(-1);
+  .key {
+    height: 52px;
+    background: var(--card-bg);
+    color: var(--card-text);
+    border: 2px solid var(--neon-yellow);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 20px;
+    cursor: pointer;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.4);
+    transition: all 0.05s;
   }
-  .fighter-right .placeholder { transform: scaleX(-1); }
+  .key:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(0,0,0,0.4); }
+  .key.submit { background: var(--neon-pink); color: #fff; border-color: var(--neon-yellow); }
+  .key.clear { background: var(--text-dim); color: var(--card-text); }
 
-  .fighter.punch-anim {
-    animation: punchMove 0.3s ease-out;
-  }
-  .fighter-right.punch-anim {
-    animation: punchMoveRight 0.3s ease-out;
-  }
-  @keyframes punchMove {
-    0%, 100% { transform: translateX(0); }
-    50% { transform: translateX(40px); }
-  }
-  @keyframes punchMoveRight {
-    0%, 100% { transform: scaleX(-1) translateX(0); }
-    50% { transform: scaleX(-1) translateX(40px); }
-  }
-
-  .fighter.hit-anim {
-    animation: hitShake 0.3s;
-  }
-  @keyframes hitShake {
-    0%, 100% { filter: none; }
-    20%, 60% { filter: hue-rotate(320deg) brightness(2); transform: translateX(-8px); }
-    40%, 80% { filter: hue-rotate(320deg) brightness(2); transform: translateX(8px); }
-  }
-  .fighter-right.hit-anim {
-    animation: hitShakeRight 0.3s;
-  }
-  @keyframes hitShakeRight {
-    0%, 100% { transform: scaleX(-1) translateX(0); filter: none; }
-    20%, 60% { filter: hue-rotate(320deg) brightness(2); transform: scaleX(-1) translateX(-8px); }
-    40%, 80% { filter: hue-rotate(320deg) brightness(2); transform: scaleX(-1) translateX(8px); }
-  }
-
-  .damage-pop {
-    position: absolute;
-    font-size: 22px;
-    font-weight: bold;
-    color: var(--neon-yellow);
-    text-shadow: 2px 2px 0 var(--danger), 0 0 10px var(--danger);
-    pointer-events: none;
-    animation: damagePop 0.8s ease-out forwards;
-    z-index: 10;
-  }
-  @keyframes damagePop {
-    0% { transform: translateY(0) scale(0.5); opacity: 0; }
-    20% { transform: translateY(-20px) scale(1.2); opacity: 1; }
-    100% { transform: translateY(-60px) scale(1); opacity: 0; }
-  }
-
-  .countdown {
+  .big-count {
     position: absolute;
     inset: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 80px;
+    font-size: 100px;
     color: var(--neon-pink);
     text-shadow: 0 0 30px var(--neon-pink), 4px 4px 0 var(--neon-cyan);
-    z-index: 20;
-    animation: countdownPulse 1s;
+    z-index: 50;
+    pointer-events: none;
+    animation: countPulse 1s;
   }
-  @keyframes countdownPulse {
+  @keyframes countPulse {
     0% { transform: scale(2); opacity: 0; }
     20% { transform: scale(1); opacity: 1; }
     80% { transform: scale(1); opacity: 1; }
     100% { transform: scale(0.5); opacity: 0; }
   }
 
-  .ko-text {
-    position: absolute;
-    inset: 0;
+  /* ─── 복수전 ─── */
+  .attack-target {
+    background: var(--card-bg);
+    color: var(--card-text);
+    border: 3px solid var(--danger);
+    border-radius: 12px;
+    padding: 14px;
+    text-align: center;
+    margin-bottom: 14px;
+  }
+  .attack-target .label { font-size: 9px; color: #666; margin-bottom: 6px; }
+  .attack-target .target-name { font-size: 20px; color: var(--danger); margin-bottom: 4px; }
+  .attack-target .target-emoji { font-size: 30px; }
+
+  .attack-stage {
+    flex: 1;
+    position: relative;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 16px;
+    overflow: hidden;
+  }
+  .attack-stage.shaking { animation: shake 0.06s infinite; }
+  @keyframes shake {
+    0% { transform: translate(0,0); }
+    25% { transform: translate(-3px, 1px); }
+    50% { transform: translate(2px, -2px); }
+    75% { transform: translate(-1px, 3px); }
+    100% { transform: translate(0,0); }
+  }
+
+  .attack-counter {
     font-size: 64px;
     color: var(--neon-yellow);
-    text-shadow:
-      0 0 20px var(--neon-pink),
-      4px 4px 0 var(--danger);
-    z-index: 20;
-    animation: koSlam 0.6s ease-out forwards;
-    letter-spacing: 6px;
+    text-shadow: 0 0 20px var(--neon-pink), 4px 4px 0 var(--danger);
   }
-  @keyframes koSlam {
-    0% { transform: scale(3) rotate(-20deg); opacity: 0; }
-    60% { transform: scale(0.9) rotate(0deg); opacity: 1; }
-    100% { transform: scale(1) rotate(0deg); opacity: 1; }
-  }
+  .attack-timer { font-size: 14px; color: var(--neon-cyan); }
+  .attack-timer.urgent { color: var(--danger); animation: blink 0.4s infinite; }
 
   .punch-btn {
-    height: 80px;
-    background: linear-gradient(180deg, var(--neon-pink), #c91269);
-    border: 3px solid var(--neon-yellow);
-    border-radius: 12px;
-    color: var(--text);
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, var(--danger), #8a0a2e);
+    border: 6px solid var(--neon-yellow);
+    color: #fff;
     font-family: inherit;
-    font-size: 22px;
-    letter-spacing: 4px;
+    font-size: 28px;
     cursor: pointer;
-    box-shadow: 0 6px 0 #5a0625, 0 0 20px rgba(255, 46, 136, 0.6);
+    box-shadow: 0 8px 0 #4a0518, 0 0 40px rgba(255, 46, 136, 0.6);
     transition: all 0.05s;
+    letter-spacing: 4px;
   }
-  .punch-btn:active:not(:disabled) {
-    transform: translateY(4px);
-    box-shadow: 0 2px 0 #5a0625;
+  .punch-btn:active { transform: translateY(6px) scale(0.95); box-shadow: 0 2px 0 #4a0518; }
+  .punch-btn:disabled { opacity: 0.4; pointer-events: none; }
+
+  .hit-fx {
+    position: absolute;
+    font-size: 40px;
+    color: var(--neon-yellow);
+    text-shadow: 0 0 10px var(--danger), 3px 3px 0 var(--danger);
+    pointer-events: none;
+    animation: hitFx 0.5s ease-out forwards;
+    z-index: 10;
   }
-  .punch-btn:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
+  @keyframes hitFx {
+    0% { transform: translate(-50%, -50%) scale(0.3) rotate(0deg); opacity: 0; }
+    30% { transform: translate(-50%, -50%) scale(1.4) rotate(-15deg); opacity: 1; }
+    100% { transform: translate(calc(-50% + var(--dx, 0)), calc(-50% + var(--dy, -80px))) scale(0.6) rotate(-15deg); opacity: 0; }
   }
 
-  /* ─── 결과 화면 ─── */
+  /* ─── 결과 ─── */
   .result-big {
-    font-size: 56px;
+    font-size: 38px;
     text-align: center;
     margin: 30px 0 16px;
-    letter-spacing: 8px;
+    letter-spacing: 4px;
+    color: var(--neon-yellow);
+    text-shadow: 0 0 20px var(--neon-pink), 3px 3px 0 var(--danger);
   }
-  .result-big.win { color: var(--success); text-shadow: 0 0 20px var(--success), 3px 3px 0 #000; }
-  .result-big.lose { color: var(--danger); text-shadow: 0 0 20px var(--danger), 3px 3px 0 #000; }
-
   .result-info {
     text-align: center;
-    margin-bottom: 20px;
-    font-size: 14px;
-    line-height: 2;
+    font-size: 13px;
+    line-height: 2.2;
+    margin-bottom: 24px;
   }
-  .streak-badge {
-    display: inline-block;
-    background: var(--neon-yellow);
-    color: #000;
-    padding: 8px 16px;
-    border-radius: 20px;
-    font-size: 12px;
-    margin-top: 8px;
-    animation: streakPulse 0.6s ease-out;
+  .result-info .big-num {
+    font-size: 36px;
+    color: var(--neon-pink);
+    display: block;
+    margin: 8px 0;
   }
-  @keyframes streakPulse {
-    0% { transform: scale(0) rotate(-180deg); }
-    100% { transform: scale(1) rotate(0deg); }
-  }
-
   .btn-row {
     display: flex;
     flex-direction: column;
     gap: 10px;
     margin-top: auto;
-    padding: 16px 0;
+    padding: 14px 0;
   }
-
   .btn {
-    height: 54px;
+    height: 52px;
     background: transparent;
     border: 2px solid var(--neon-cyan);
     border-radius: 8px;
     color: var(--neon-cyan);
     font-family: inherit;
-    font-size: 14px;
+    font-size: 13px;
     letter-spacing: 2px;
     cursor: pointer;
     transition: all 0.15s;
   }
-  .btn:active {
-    background: var(--neon-cyan);
-    color: var(--bg-1);
-    transform: scale(0.97);
-  }
-  .btn.primary {
-    border-color: var(--neon-pink);
-    color: var(--neon-pink);
-  }
-  .btn.primary:active {
-    background: var(--neon-pink);
-    color: #fff;
-  }
+  .btn:active { background: var(--neon-cyan); color: var(--bg-1); transform: scale(0.97); }
+  .btn.primary { border-color: var(--neon-pink); color: var(--neon-pink); }
+  .btn.primary:active { background: var(--neon-pink); color: #fff; }
 
   /* ─── 랭킹 ─── */
-  .rank-list {
-    flex: 1;
-    overflow-y: auto;
-    padding: 4px;
-  }
+  .rank-list { flex: 1; overflow-y: auto; padding: 4px; }
   .rank-row {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 14px;
-    background: linear-gradient(90deg, rgba(255, 46, 136, 0.08), transparent);
-    border: 1px solid var(--text-dim);
-    border-radius: 8px;
+    padding: 12px;
+    background: var(--card-bg);
+    color: var(--card-text);
+    border: 2px solid var(--text-dim);
+    border-radius: 10px;
     margin-bottom: 8px;
+    box-shadow: 0 3px 0 rgba(0,0,0,0.3);
   }
-  .rank-row.gold {
-    border-color: var(--neon-yellow);
-    background: linear-gradient(90deg, rgba(255, 214, 10, 0.18), transparent);
-    box-shadow: 0 0 20px rgba(255, 214, 10, 0.3);
-  }
+  .rank-row.gold { border-color: var(--neon-yellow); box-shadow: 0 3px 0 rgba(0,0,0,0.3), 0 0 20px rgba(255, 214, 10, 0.4); }
   .rank-row.silver { border-color: #c0c0c0; }
   .rank-row.bronze { border-color: #cd7f32; }
+  .rank-row.disqualified { opacity: 0.6; }
 
-  .rank-position {
-    font-size: 20px;
-    width: 40px;
-    text-align: center;
-    color: var(--neon-yellow);
-  }
+  .rank-position { font-size: 22px; width: 38px; text-align: center; }
   .rank-avatar {
     width: 44px;
     height: 44px;
@@ -543,53 +430,16 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 18px;
-    flex-shrink: 0;
-  }
-  .rank-avatar img {
-    width: 100%; height: 100%; object-fit: cover; border-radius: 8px;
-  }
-  .rank-info {
-    flex: 1;
-    font-size: 14px;
-  }
-  .rank-info small {
-    display: block;
-    color: var(--text-dim);
-    font-size: 9px;
-    margin-top: 4px;
-  }
-  .rank-wins {
     font-size: 22px;
-    color: var(--neon-pink);
-    text-shadow: 0 0 8px var(--neon-pink);
+    flex-shrink: 0;
+    overflow: hidden;
   }
-  .rank-wins small {
-    font-size: 9px;
-    color: var(--text-dim);
-    display: block;
-    text-align: right;
-  }
-
-  /* ─── 토스트 ─── */
-  .toast {
-    position: fixed;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(0, 0, 0, 0.9);
-    border: 2px solid var(--danger);
-    padding: 12px 20px;
-    border-radius: 8px;
-    color: var(--danger);
-    font-size: 11px;
-    z-index: 100;
-    animation: toastIn 0.3s;
-  }
-  @keyframes toastIn {
-    from { transform: translate(-50%, -40px); opacity: 0; }
-    to { transform: translate(-50%, 0); opacity: 1; }
-  }
+  .rank-avatar img { width: 100%; height: 100%; object-fit: cover; image-rendering: pixelated; }
+  .rank-info { flex: 1; font-size: 14px; }
+  .rank-info small { display: block; color: #666; font-size: 9px; margin-top: 4px; }
+  .rank-score { font-size: 22px; color: var(--neon-pink); }
+  .rank-score.negative { color: var(--danger); }
+  .rank-score small { font-size: 9px; color: #666; display: block; text-align: right; }
 
   .top-bar {
     display: flex;
@@ -602,126 +452,167 @@
     border: none;
     color: var(--neon-cyan);
     font-family: inherit;
-    font-size: 14px;
+    font-size: 13px;
     cursor: pointer;
-    padding: 8px;
+    padding: 6px 8px;
   }
+  .top-info { font-size: 9px; color: var(--text-dim); }
 
-  .vs-banner {
-    display: flex;
-    align-items: center;
-    justify-content: space-around;
-    padding: 16px 0;
-    margin-bottom: 12px;
-  }
-  .vs-name {
-    font-size: 18px;
-    color: var(--neon-yellow);
-    text-shadow: 2px 2px 0 #000;
-  }
-  .vs-text {
-    font-size: 28px;
-    color: var(--neon-pink);
-    text-shadow: 0 0 15px var(--neon-pink);
-  }
-
-  .match-count {
+  .toast {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.95);
+    border: 2px solid var(--danger);
+    padding: 12px 18px;
+    border-radius: 8px;
+    color: var(--danger);
+    font-size: 10px;
+    z-index: 100;
+    animation: toastIn 0.3s;
     text-align: center;
-    color: var(--text-dim);
-    font-size: 9px;
-    margin-top: 4px;
+    max-width: 90%;
   }
+  @keyframes toastIn {
+    from { transform: translate(-50%, -40px); opacity: 0; }
+    to { transform: translate(-50%, 0); opacity: 1; }
+  }
+
+  .target-pick-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    margin: 12px 0;
+  }
+  .target-pick-card {
+    background: var(--card-bg);
+    border: 3px solid var(--danger);
+    border-radius: 10px;
+    padding: 10px 6px;
+    text-align: center;
+    cursor: pointer;
+    box-shadow: 0 3px 0 rgba(0,0,0,0.3);
+  }
+  .target-pick-card:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,0.3); }
+  .target-pick-card .tp-emoji { font-size: 26px; }
+  .target-pick-card .tp-name { font-size: 12px; color: var(--card-text); margin-top: 4px; }
 </style>
 </head>
 <body>
 <div id="app">
 
-  <!-- ─── 화면 1: 캐릭터 선택 (나) ─── -->
   <section id="screen-pick-self" class="screen active">
-    <h1 class="title">HOMIE<br>FIGHTER</h1>
+    <h1 class="title">야차뜨기</h1>
     <p class="subtitle">▸ 네 캐릭터를 골라라 ◂</p>
     <div class="char-grid" id="grid-self"></div>
-    <button class="btn" style="margin-top:12px" onclick="goto('screen-ranking'); renderRanking()">🏆 랭킹 보기</button>
+    <button class="btn" style="margin-top:14px" onclick="goto('screen-ranking'); renderRanking()">🏆 랭킹 보기</button>
   </section>
 
-  <!-- ─── 화면 2: 상대 선택 ─── -->
-  <section id="screen-pick-opponent" class="screen">
+  <section id="screen-mode" class="screen">
     <div class="top-bar">
-      <button class="back-btn" onclick="goto('screen-pick-self')">◂ 뒤로</button>
-      <span style="font-size:10px;color:var(--text-dim)" id="self-label"></span>
+      <button class="back-btn" onclick="goto('screen-pick-self')">◂ 캐릭터 변경</button>
     </div>
-    <p class="subtitle">▸ 누구랑 붙을래? ◂</p>
-    <div class="char-grid" id="grid-opponent"></div>
-  </section>
-
-  <!-- ─── 화면 3: 전투 ─── -->
-  <section id="screen-fight" class="screen">
-    <div class="hp-bars">
-      <div class="hp-box left">
-        <div class="hp-name" id="hp-name-left">-</div>
-        <div class="hp-bar"><div class="hp-fill" id="hp-fill-left" style="width:100%"></div></div>
-      </div>
-      <div class="hp-box right">
-        <div class="hp-name" id="hp-name-right">-</div>
-        <div class="hp-bar"><div class="hp-fill" id="hp-fill-right" style="width:100%"></div></div>
+    <div class="me-bar">
+      <span>나: <span class="me-name" id="me-name">-</span></span>
+      <span id="me-stats">암산 0/5 · 복수전 1/1</span>
+    </div>
+    <div class="mode-card" id="card-quiz" onclick="enterQuiz()">
+      <div class="mode-icon">🧮</div>
+      <div class="mode-text">
+        <div class="mode-title">암산 도전</div>
+        <div class="mode-sub">한자리+두자리 덧셈<br>10초 / 정답+1 · 오답-1<br>오늘 <span id="quiz-left">5</span>회 남음</div>
       </div>
     </div>
-    <div class="arena" id="arena">
-      <div class="fighter fighter-left" id="fighter-left"></div>
-      <div class="fighter fighter-right" id="fighter-right"></div>
+    <div class="mode-card attack" id="card-attack" onclick="enterAttackPick()">
+      <div class="mode-icon">💢</div>
+      <div class="mode-text">
+        <div class="mode-title">복수전</div>
+        <div class="mode-sub">친구 1명 골라서 5초 펀치 난타<br>상대 평균 -1.0 깎기<br>오늘 <span id="attack-left">1</span>회 남음</div>
+      </div>
     </div>
-    <button class="punch-btn" id="punch-btn" onclick="playerPunch()">🥊 PUNCH</button>
+    <button class="btn" style="margin-top:8px" onclick="goto('screen-ranking'); renderRanking()">🏆 랭킹 보기</button>
   </section>
 
-  <!-- ─── 화면 4: 결과 ─── -->
+  <section id="screen-attack-pick" class="screen">
+    <div class="top-bar">
+      <button class="back-btn" onclick="goto('screen-mode')">◂ 뒤로</button>
+    </div>
+    <h1 class="title" style="font-size:22px;margin:8px 0">💢 복수전</h1>
+    <p class="subtitle">▸ 누구 점수를 깎을래? ◂</p>
+    <div class="target-pick-grid" id="target-pick-grid"></div>
+    <p style="text-align:center;font-size:9px;color:var(--text-dim);margin-top:auto;padding-bottom:14px">
+      ※ 선택 후 5초 동안 펀치 난타<br>1번이라도 치면 상대 평균 -1.0 차감
+    </p>
+  </section>
+
+  <section id="screen-quiz" class="screen">
+    <div class="quiz-top">
+      <span>나: <span style="color:var(--neon-yellow)" id="quiz-self">-</span></span>
+      <span class="score">점수 <span id="quiz-score">0</span></span>
+      <span class="time" id="quiz-time">10</span>
+    </div>
+    <div class="quiz-stage">
+      <div class="quiz-question" id="quiz-q">- + -</div>
+      <div class="quiz-input" id="quiz-input">_</div>
+      <div class="keypad" id="keypad"></div>
+    </div>
+  </section>
+
+  <section id="screen-attack" class="screen">
+    <div class="attack-target">
+      <div class="label">▸ TARGET ◂</div>
+      <div class="target-emoji" id="atk-target-emoji">👤</div>
+      <div class="target-name" id="atk-target-name">-</div>
+    </div>
+    <div class="attack-stage" id="atk-stage">
+      <div class="attack-counter" id="atk-count">0</div>
+      <div class="attack-timer" id="atk-timer">5.0s</div>
+      <button class="punch-btn" id="atk-btn" onclick="attackTap(event)">PUNCH</button>
+    </div>
+  </section>
+
   <section id="screen-result" class="screen">
-    <div class="result-big" id="result-text">-</div>
+    <div class="result-big" id="result-title">-</div>
     <div class="result-info" id="result-info"></div>
     <div class="btn-row">
-      <button class="btn primary" onclick="goto('screen-pick-self'); resetState()">다시 시작</button>
+      <button class="btn primary" onclick="goto('screen-mode'); refreshModeScreen()">계속하기</button>
       <button class="btn" onclick="goto('screen-ranking'); renderRanking()">🏆 랭킹 보기</button>
     </div>
   </section>
 
-  <!-- ─── 화면 5: 랭킹 ─── -->
   <section id="screen-ranking" class="screen">
     <div class="top-bar">
-      <button class="back-btn" onclick="goto('screen-pick-self')">◂ 메인</button>
-      <span style="font-size:10px;color:var(--text-dim)" id="ranking-status">로딩 중...</span>
+      <button class="back-btn" onclick="goBackFromRanking()">◂ 뒤로</button>
+      <span class="top-info" id="ranking-status">로딩 중...</span>
     </div>
     <h1 class="title" style="font-size:22px;margin:8px 0">🏆 RANKING</h1>
+    <p class="subtitle" style="font-size:9px">평균점수 - 받은복수전 (3게임 이상)</p>
     <div class="rank-list" id="rank-list"></div>
   </section>
 
 </div>
 
 <script>
-// ════════════════════════════════════════════════
-//  데이터 정의
-// ════════════════════════════════════════════════
 const CHARACTERS = [
-  { id: '빡규', name: '빡규', gender: 'M', style: '강타형',  attack: 12, cooldown: 700, color: '#ff2e88', emoji: '😤' },
-  { id: '효구', name: '효구', gender: 'F', style: '속사형',  attack: 8,  cooldown: 350, color: '#00f0ff', emoji: '😎' },
-  { id: '충히', name: '충히', gender: 'F', style: '밸런스',  attack: 10, cooldown: 500, color: '#ffd60a', emoji: '🙂' },
-  { id: '덩학', name: '덩학', gender: 'M', style: '한방형',  attack: 14, cooldown: 900, color: '#b537f2', emoji: '😈' },
+  { id: '빡규', name: '빡규', color: '#ff2e88', emoji: '😤' },
+  { id: '효구', name: '효구', color: '#00f0ff', emoji: '😎' },
+  { id: '충히', name: '충히', color: '#ffd60a', emoji: '🙂' },
+  { id: '덩학', name: '덩학', color: '#b537f2', emoji: '😈' },
 ];
-const HP_MAX = 100;
-const DAILY_MATCH_LIMIT = 3;
+const QUIZ_DAILY = 5;
+const ATTACK_DAILY = 1;
+const QUIZ_DURATION = 10;
+const ATTACK_DURATION = 5;
+const ATTACK_DAMAGE = -1.0;
+const RANK_MIN_GAMES = 3;
 
 let state = {
   self: null,
-  opponent: null,
-  selfHP: HP_MAX,
-  oppHP: HP_MAX,
-  selfCooldown: false,
-  oppTimer: null,
-  battleStarted: false,
-  battleEnded: false,
+  quiz: { score: 0, current: null, input: '', timeLeft: 0, timer: null },
+  attack: { target: null, count: 0, timeLeft: 0, timer: null, active: false },
 };
 
-// ════════════════════════════════════════════════
-//  유틸: 화면 전환
-// ════════════════════════════════════════════════
 function goto(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
@@ -730,46 +621,37 @@ function goto(id) {
 function toast(msg) {
   const el = document.createElement('div');
   el.className = 'toast';
-  el.textContent = msg;
+  el.innerHTML = msg;
   document.body.appendChild(el);
-  setTimeout(() => el.remove(), 2200);
+  setTimeout(() => el.remove(), 2500);
 }
 
-// ════════════════════════════════════════════════
-//  캐릭터 카드 렌더링
-// ════════════════════════════════════════════════
-function makeCharCard(char, onClick, disabled = false) {
+function todayKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+}
+function lsGet(k, def) { return JSON.parse(localStorage.getItem(k) || JSON.stringify(def)); }
+function lsSet(k, v) { localStorage.setItem(k, JSON.stringify(v)); }
+function vibrate(ms) { if (navigator.vibrate) navigator.vibrate(ms); }
+
+function makeCharCard(char, onClick, disabled) {
   const card = document.createElement('div');
   card.className = 'char-card' + (disabled ? ' disabled' : '');
-
   const portrait = document.createElement('div');
   portrait.className = 'char-portrait';
-
-  // 이미지가 있으면 표시, 없으면 도형 플레이스홀더
   const img = new Image();
   img.src = `char_${char.id}.png`;
   img.onload = () => portrait.replaceChildren(img);
-  img.onerror = () => {}; // 그대로 도형 유지
-
-  const placeholder = document.createElement('div');
-  placeholder.className = 'placeholder';
-  placeholder.style.background = `linear-gradient(135deg, ${char.color}, ${char.color}88)`;
-  placeholder.textContent = char.emoji;
-  portrait.appendChild(placeholder);
-
+  img.onerror = () => {};
+  const ph = document.createElement('div');
+  ph.className = 'placeholder';
+  ph.style.background = `linear-gradient(135deg, ${char.color}, ${char.color}88)`;
+  ph.textContent = char.emoji;
+  portrait.appendChild(ph);
   const name = document.createElement('div');
   name.className = 'char-name';
   name.textContent = char.name;
-
-  const style = document.createElement('div');
-  style.className = 'char-style';
-  style.textContent = char.style;
-
-  const stats = document.createElement('div');
-  stats.className = 'char-stats';
-  stats.innerHTML = `<span>ATK ${char.attack}</span><span>SPD ${(1000/char.cooldown).toFixed(1)}</span>`;
-
-  card.append(portrait, name, style, stats);
+  card.append(portrait, name);
   if (!disabled) card.onclick = () => onClick(char);
   return card;
 }
@@ -780,357 +662,343 @@ function renderSelfGrid() {
   CHARACTERS.forEach(c => grid.appendChild(makeCharCard(c, pickSelf)));
 }
 
-function renderOpponentGrid() {
-  const grid = document.getElementById('grid-opponent');
-  grid.innerHTML = '';
-  CHARACTERS.forEach(c => {
-    const isSelf = c.id === state.self.id;
-    const overLimit = matchCountToday(state.self.id, c.id) >= DAILY_MATCH_LIMIT;
-    grid.appendChild(makeCharCard(c, pickOpponent, isSelf || overLimit));
-  });
-  document.getElementById('self-label').textContent = `나: ${state.self.name}`;
-}
-
-function makeFighterEl(char, side) {
-  const wrap = document.getElementById(side === 'left' ? 'fighter-left' : 'fighter-right');
-  wrap.innerHTML = '';
-  const img = new Image();
-  img.src = `char_${char.id}.png`;
-  img.onload = () => wrap.replaceChildren(img);
-  img.onerror = () => {};
-  const ph = document.createElement('div');
-  ph.className = 'placeholder';
-  ph.style.background = `linear-gradient(135deg, ${char.color}, ${char.color}88)`;
-  ph.textContent = char.emoji;
-  wrap.appendChild(ph);
-}
-
-// ════════════════════════════════════════════════
-//  선택 흐름
-// ════════════════════════════════════════════════
 function pickSelf(char) {
   state.self = char;
-  goto('screen-pick-opponent');
-  renderOpponentGrid();
+  lsSet('lastChar', char.id);
+  goto('screen-mode');
+  refreshModeScreen();
 }
 
-function pickOpponent(char) {
-  state.opponent = char;
-  recordMatchAttempt(state.self.id, char.id);
-  startFight();
+function refreshModeScreen() {
+  document.getElementById('me-name').textContent = state.self.name;
+  const qToday = getDailyCount('quiz');
+  const aToday = getDailyCount('attack');
+  document.getElementById('quiz-left').textContent = Math.max(0, QUIZ_DAILY - qToday);
+  document.getElementById('attack-left').textContent = Math.max(0, ATTACK_DAILY - aToday);
+  document.getElementById('me-stats').textContent =
+    `암산 ${qToday}/${QUIZ_DAILY} · 복수전 ${aToday}/${ATTACK_DAILY}`;
+  document.getElementById('card-quiz').classList.toggle('disabled', qToday >= QUIZ_DAILY);
+  document.getElementById('card-attack').classList.toggle('disabled', aToday >= ATTACK_DAILY);
+}
+
+function getDailyCount(type) {
+  return lsGet(`daily_${todayKey()}_${type}_${state.self.id}`, 0);
+}
+function incDailyCount(type) {
+  const k = `daily_${todayKey()}_${type}_${state.self.id}`;
+  lsSet(k, getDailyCount(type) + 1);
 }
 
 // ════════════════════════════════════════════════
-//  전투 로직
+//  암산
 // ════════════════════════════════════════════════
-function startFight() {
-  state.selfHP = HP_MAX;
-  state.oppHP = HP_MAX;
-  state.selfCooldown = false;
-  state.battleStarted = false;
-  state.battleEnded = false;
-  goto('screen-fight');
-
-  document.getElementById('hp-name-left').textContent = state.self.name;
-  document.getElementById('hp-name-right').textContent = state.opponent.name;
-  updateHPBar();
-  makeFighterEl(state.self, 'left');
-  makeFighterEl(state.opponent, 'right');
-
-  // 카운트다운
-  showCountdown(3, () => {
-    state.battleStarted = true;
-    scheduleBotAttack();
-  });
-
-  document.getElementById('punch-btn').disabled = false;
+function enterQuiz() {
+  if (getDailyCount('quiz') >= QUIZ_DAILY) {
+    toast('오늘 암산 도전 5회 다 썼다!');
+    return;
+  }
+  state.quiz = { score: 0, current: null, input: '', timeLeft: QUIZ_DURATION, timer: null };
+  document.getElementById('quiz-self').textContent = state.self.name;
+  document.getElementById('quiz-score').textContent = '0';
+  document.getElementById('quiz-time').textContent = QUIZ_DURATION.toFixed(1);
+  document.getElementById('quiz-time').classList.remove('urgent');
+  goto('screen-quiz');
+  renderKeypad();
+  showBigCount(3, startQuiz);
 }
 
-function showCountdown(n, done) {
-  const arena = document.getElementById('arena');
+function showBigCount(n, done) {
+  const target = document.querySelector('.screen.active');
   const el = document.createElement('div');
-  el.className = 'countdown';
-  el.textContent = n === 0 ? 'FIGHT!' : n;
-  arena.appendChild(el);
+  el.className = 'big-count';
+  el.textContent = n === 0 ? 'GO!' : n;
+  target.appendChild(el);
   setTimeout(() => el.remove(), 950);
-  if (n > 0) setTimeout(() => showCountdown(n - 1, done), 1000);
-  else setTimeout(done, 600);
+  if (n > 0) setTimeout(() => showBigCount(n - 1, done), 1000);
+  else setTimeout(done, 500);
 }
 
-function updateHPBar() {
-  document.getElementById('hp-fill-left').style.width = Math.max(0, state.selfHP) + '%';
-  document.getElementById('hp-fill-right').style.width = Math.max(0, state.oppHP) + '%';
+function startQuiz() {
+  nextQuestion();
+  state.quiz.timer = setInterval(() => {
+    state.quiz.timeLeft -= 0.1;
+    const t = Math.max(0, state.quiz.timeLeft);
+    document.getElementById('quiz-time').textContent = t.toFixed(1);
+    if (t <= 3) document.getElementById('quiz-time').classList.add('urgent');
+    if (t <= 0) endQuiz();
+  }, 100);
 }
 
-function playerPunch() {
-  if (!state.battleStarted || state.battleEnded || state.selfCooldown) return;
-  state.selfCooldown = true;
-  document.getElementById('punch-btn').disabled = true;
-
-  const fl = document.getElementById('fighter-left');
-  fl.classList.add('punch-anim');
-  setTimeout(() => fl.classList.remove('punch-anim'), 300);
-
-  setTimeout(() => {
-    if (state.battleEnded) return;
-    const dmg = state.self.attack;
-    state.oppHP -= dmg;
-    showDamage('right', dmg);
-    const fr = document.getElementById('fighter-right');
-    fr.classList.add('hit-anim');
-    setTimeout(() => fr.classList.remove('hit-anim'), 300);
-    updateHPBar();
-    checkEnd();
-  }, 150);
-
-  setTimeout(() => {
-    state.selfCooldown = false;
-    if (!state.battleEnded) document.getElementById('punch-btn').disabled = false;
-  }, state.self.cooldown);
+function nextQuestion() {
+  const a = Math.floor(Math.random() * 9) + 1;
+  const b = Math.floor(Math.random() * 90) + 10;
+  state.quiz.current = { a, b, ans: a + b };
+  state.quiz.input = '';
+  document.getElementById('quiz-q').textContent = `${a} + ${b}`;
+  document.getElementById('quiz-input').textContent = '_';
 }
 
-function scheduleBotAttack() {
-  if (state.battleEnded) return;
-  const interval = state.opponent.cooldown * (0.85 + Math.random() * 0.3); // ±15% 랜덤
-  state.oppTimer = setTimeout(() => {
-    if (state.battleEnded) return;
-    botPunch();
-    scheduleBotAttack();
-  }, interval);
+function renderKeypad() {
+  const pad = document.getElementById('keypad');
+  pad.innerHTML = '';
+  const layout = ['1','2','3','4','5','6','7','8','9','C','0','✓'];
+  layout.forEach(k => {
+    const btn = document.createElement('button');
+    btn.className = 'key' + (k === '✓' ? ' submit' : (k === 'C' ? ' clear' : ''));
+    btn.textContent = k;
+    btn.onclick = () => handleKey(k);
+    pad.appendChild(btn);
+  });
 }
 
-function botPunch() {
-  if (state.battleEnded) return;
-  const fr = document.getElementById('fighter-right');
-  fr.classList.add('punch-anim');
-  setTimeout(() => fr.classList.remove('punch-anim'), 300);
-
-  setTimeout(() => {
-    if (state.battleEnded) return;
-    const dmg = state.opponent.attack;
-    state.selfHP -= dmg;
-    showDamage('left', dmg);
-    const fl = document.getElementById('fighter-left');
-    fl.classList.add('hit-anim');
-    setTimeout(() => fl.classList.remove('hit-anim'), 300);
-    updateHPBar();
-    checkEnd();
-  }, 150);
-}
-
-function showDamage(side, dmg) {
-  const arena = document.getElementById('arena');
-  const el = document.createElement('div');
-  el.className = 'damage-pop';
-  el.textContent = '-' + dmg;
-  el.style[side === 'left' ? 'left' : 'right'] = '15%';
-  el.style.top = '40%';
-  arena.appendChild(el);
-  setTimeout(() => el.remove(), 800);
-}
-
-function checkEnd() {
-  if (state.battleEnded) return;
-  if (state.selfHP <= 0 || state.oppHP <= 0) {
-    state.battleEnded = true;
-    if (state.oppTimer) clearTimeout(state.oppTimer);
-    document.getElementById('punch-btn').disabled = true;
-    const playerWon = state.selfHP > 0;
-    showKO(playerWon);
+function handleKey(k) {
+  if (state.quiz.timeLeft <= 0) return;
+  vibrate(15);
+  if (k === 'C') {
+    state.quiz.input = '';
+  } else if (k === '✓') {
+    submitAnswer();
+    return;
+  } else if (state.quiz.input.length < 3) {
+    state.quiz.input += k;
   }
+  document.getElementById('quiz-input').textContent = state.quiz.input || '_';
 }
 
-function showKO(playerWon) {
-  const arena = document.getElementById('arena');
-  const el = document.createElement('div');
-  el.className = 'ko-text';
-  el.textContent = 'K.O.';
-  arena.appendChild(el);
-
-  setTimeout(() => {
-    finishMatch(playerWon);
-  }, 1800);
-}
-
-// ════════════════════════════════════════════════
-//  매치 기록 / 연승 / 제한
-// ════════════════════════════════════════════════
-function todayKey() {
-  const d = new Date();
-  return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
-}
-
-function matchCountToday(selfId, oppId) {
-  const key = `match_${todayKey()}_${selfId}_${oppId}`;
-  return parseInt(localStorage.getItem(key) || '0', 10);
-}
-
-function recordMatchAttempt(selfId, oppId) {
-  const key = `match_${todayKey()}_${selfId}_${oppId}`;
-  localStorage.setItem(key, matchCountToday(selfId, oppId) + 1);
-}
-
-function getStreak(charId) {
-  return JSON.parse(localStorage.getItem('streak_' + charId) || '{"count":0,"lastOpp":null}');
-}
-function setStreak(charId, data) {
-  localStorage.setItem('streak_' + charId, JSON.stringify(data));
-}
-
-function calcStreakBonus(count) {
-  if (count >= 5) return 3;
-  if (count >= 3) return 2;
-  if (count >= 2) return 1;
-  return 0;
-}
-
-function finishMatch(playerWon) {
-  const winner = playerWon ? state.self : state.opponent;
-  const loser  = playerWon ? state.opponent : state.self;
-
-  let bonus = 0;
-  let streakCount = 0;
-
-  if (playerWon) {
-    // 승리한 캐릭터(winner)의 연승 갱신: 같은 상대 연속 승리는 무효
-    const s = getStreak(winner.id);
-    if (s.lastOpp === loser.id) {
-      // 같은 상대 - 연승 카운트 유지(증가 X)
-      streakCount = s.count;
-    } else {
-      streakCount = s.count + 1;
-    }
-    bonus = calcStreakBonus(streakCount);
-    setStreak(winner.id, { count: streakCount, lastOpp: loser.id });
-    // 패배한 사람의 연승은 끊김
-    setStreak(loser.id, { count: 0, lastOpp: null });
+function submitAnswer() {
+  if (state.quiz.input === '') return;
+  const inputEl = document.getElementById('quiz-input');
+  const ans = parseInt(state.quiz.input, 10);
+  if (ans === state.quiz.current.ans) {
+    state.quiz.score += 1;
+    inputEl.classList.add('flash-correct');
+    vibrate(30);
   } else {
-    // 패배한 사람(state.self)의 연승 끊김
-    setStreak(state.self.id, { count: 0, lastOpp: null });
-    // 봇(winner)의 연승도 기록 (다른 누군가가 봇이 됐을 수 있으므로)
-    const s = getStreak(winner.id);
-    if (s.lastOpp === loser.id) {
-      streakCount = s.count;
-    } else {
-      streakCount = s.count + 1;
-    }
-    bonus = calcStreakBonus(streakCount);
-    setStreak(winner.id, { count: streakCount, lastOpp: loser.id });
+    state.quiz.score -= 1;
+    inputEl.classList.add('flash-wrong');
+    vibrate([20, 50, 20]);
+  }
+  setTimeout(() => inputEl.classList.remove('flash-correct', 'flash-wrong'), 300);
+  document.getElementById('quiz-score').textContent = state.quiz.score;
+  nextQuestion();
+}
+
+function endQuiz() {
+  clearInterval(state.quiz.timer);
+  document.getElementById('quiz-time').classList.remove('urgent');
+  incDailyCount('quiz');
+  const finalScore = state.quiz.score;
+  saveRecord({ type: 'quiz', char: state.self.id, score: finalScore });
+  document.getElementById('result-title').textContent = '암산 종료!';
+  let info = `<strong>${state.self.name}</strong>의 점수`;
+  info += `<span class="big-num" style="color:${finalScore >= 0 ? 'var(--neon-yellow)' : 'var(--danger)'}">${finalScore >= 0 ? '+' : ''}${finalScore}</span>`;
+  info += `<span style="font-size:11px;color:var(--text-dim)">평균에 누적됩니다</span>`;
+  document.getElementById('result-info').innerHTML = info;
+  goto('screen-result');
+}
+
+// ════════════════════════════════════════════════
+//  복수전
+// ════════════════════════════════════════════════
+function enterAttackPick() {
+  if (getDailyCount('attack') >= ATTACK_DAILY) {
+    toast('오늘 복수전 1회 다 썼다!');
+    return;
+  }
+  const grid = document.getElementById('target-pick-grid');
+  grid.innerHTML = '';
+  CHARACTERS.filter(c => c.id !== state.self.id).forEach(c => {
+    const card = document.createElement('div');
+    card.className = 'target-pick-card';
+    card.innerHTML = `<div class="tp-emoji">${c.emoji}</div><div class="tp-name">${c.name}</div>`;
+    card.onclick = () => startAttack(c);
+    grid.appendChild(card);
+  });
+  goto('screen-attack-pick');
+}
+
+function startAttack(target) {
+  state.attack = { target, count: 0, timeLeft: ATTACK_DURATION, timer: null, active: false };
+  document.getElementById('atk-target-name').textContent = target.name;
+  document.getElementById('atk-target-emoji').textContent = target.emoji;
+  document.getElementById('atk-count').textContent = '0';
+  document.getElementById('atk-timer').textContent = ATTACK_DURATION.toFixed(1) + 's';
+  document.getElementById('atk-timer').classList.remove('urgent');
+  document.getElementById('atk-btn').disabled = true;
+  goto('screen-attack');
+  showBigCount(3, beginAttack);
+}
+
+function beginAttack() {
+  state.attack.active = true;
+  document.getElementById('atk-btn').disabled = false;
+  document.getElementById('atk-stage').classList.add('shaking');
+  state.attack.timer = setInterval(() => {
+    state.attack.timeLeft -= 0.1;
+    const t = Math.max(0, state.attack.timeLeft);
+    document.getElementById('atk-timer').textContent = t.toFixed(1) + 's';
+    if (t <= 2) document.getElementById('atk-timer').classList.add('urgent');
+    if (t <= 0) endAttack();
+  }, 100);
+}
+
+function attackTap(ev) {
+  if (!state.attack.active) return;
+  state.attack.count++;
+  document.getElementById('atk-count').textContent = state.attack.count;
+  vibrate(35);
+  const stage = document.getElementById('atk-stage');
+  const fx = document.createElement('div');
+  fx.className = 'hit-fx';
+  const effects = ['💥','💢','👊','🔥','⚡','💫'];
+  fx.textContent = effects[Math.floor(Math.random() * effects.length)];
+  const rect = stage.getBoundingClientRect();
+  const x = (ev.touches?.[0]?.clientX || ev.clientX || rect.left + rect.width/2) - rect.left;
+  const y = (ev.touches?.[0]?.clientY || ev.clientY || rect.top + rect.height/2) - rect.top;
+  fx.style.left = x + 'px';
+  fx.style.top = y + 'px';
+  fx.style.setProperty('--dx', (Math.random() * 80 - 40) + 'px');
+  fx.style.setProperty('--dy', (-60 - Math.random() * 40) + 'px');
+  stage.appendChild(fx);
+  setTimeout(() => fx.remove(), 500);
+}
+
+function endAttack() {
+  clearInterval(state.attack.timer);
+  state.attack.active = false;
+  document.getElementById('atk-stage').classList.remove('shaking');
+  document.getElementById('atk-btn').disabled = true;
+  document.getElementById('atk-timer').classList.remove('urgent');
+
+  const count = state.attack.count;
+  const target = state.attack.target;
+  let dmg = 0;
+  if (count >= 1) {
+    dmg = ATTACK_DAMAGE;
+    incDailyCount('attack');
+    saveRecord({ type: 'attack', char: state.self.id, target: target.id, damage: dmg, taps: count });
   }
 
-  const totalAdded = 1 + bonus;
-  saveMatch({ winner: winner.id, loser: loser.id, streakBonus: bonus, totalAdded });
-
-  // 결과 화면
-  document.getElementById('result-text').textContent = playerWon ? 'WIN!' : 'LOSE';
-  document.getElementById('result-text').className = 'result-big ' + (playerWon ? 'win' : 'lose');
-  let info = `<strong style="color:var(--neon-yellow)">${winner.name}</strong> 승리`;
-  info += `<br><span style="font-size:11px;color:var(--text-dim)">+${totalAdded}승 적립</span>`;
-  if (bonus > 0) {
-    info += `<br><span class="streak-badge">🔥 ${streakCount}연승 보너스 +${bonus}</span>`;
+  document.getElementById('result-title').textContent = count >= 1 ? '복수 성공!' : '아무것도 안 함';
+  let info = '';
+  if (count >= 1) {
+    info += `<strong style="color:var(--danger)">${target.name}</strong>의 평균을`;
+    info += `<span class="big-num" style="color:var(--danger)">${dmg.toFixed(1)}점</span>`;
+    info += `깎았다!<br><span style="font-size:10px;color:var(--text-dim)">총 ${count}번 펀치</span>`;
+  } else {
+    info += `펀치 1번도 안 했네...<br><span style="font-size:10px">기회 소모 없음</span>`;
   }
   document.getElementById('result-info').innerHTML = info;
   goto('screen-result');
 }
 
 // ════════════════════════════════════════════════
-//  저장 (로컬 + 구글시트)
+//  저장 / 랭킹
 // ════════════════════════════════════════════════
-function saveMatch(match) {
-  // 로컬 저장
-  const arr = JSON.parse(localStorage.getItem('matches') || '[]');
-  arr.push({ ...match, ts: Date.now() });
-  localStorage.setItem('matches', JSON.stringify(arr));
-
-  // 구글시트 전송 (URL 설정된 경우)
+function saveRecord(rec) {
+  const arr = lsGet('records', []);
+  arr.push({ ...rec, ts: Date.now() });
+  lsSet('records', arr);
   if (SHEET_URL) {
     fetch(SHEET_URL, {
       method: 'POST',
-      mode: 'no-cors', // CORS 우회 (Apps Script 단순 응답)
+      mode: 'no-cors',
       headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({
-        winner: match.winner,
-        loser: match.loser,
-        streakBonus: match.streakBonus,
-        totalAdded: match.totalAdded,
-        ts: new Date().toISOString()
-      })
-    }).catch(() => {/* 실패해도 게임은 진행 */});
+      body: JSON.stringify({ ...rec, ts: new Date().toISOString() })
+    }).catch(() => {});
   }
 }
 
-async function fetchRanking() {
-  // 시트 URL 있으면 시트에서, 없으면 로컬에서
+async function fetchAllRecords() {
   if (SHEET_URL) {
     try {
-      const res = await fetch(SHEET_URL + '?action=ranking');
-      const data = await res.json();
-      return data;
+      const res = await fetch(SHEET_URL + '?action=records');
+      return await res.json();
     } catch (e) {
       console.warn('시트 조회 실패, 로컬 사용', e);
     }
   }
-  // 로컬 집계
-  const matches = JSON.parse(localStorage.getItem('matches') || '[]');
-  const agg = {};
-  CHARACTERS.forEach(c => agg[c.id] = { wins: 0, lastWin: 0 });
-  matches.forEach(m => {
-    if (agg[m.winner]) {
-      agg[m.winner].wins += (m.totalAdded || 1);
-      if (m.ts > agg[m.winner].lastWin) agg[m.winner].lastWin = m.ts;
-    }
-  });
-  return Object.entries(agg).map(([id, v]) => ({ id, wins: v.wins, lastWin: v.lastWin }));
+  return lsGet('records', []);
 }
 
 async function renderRanking() {
   const statusEl = document.getElementById('ranking-status');
   statusEl.textContent = '로딩 중...';
-  const data = await fetchRanking();
+  const records = await fetchAllRecords();
   statusEl.textContent = SHEET_URL ? '시트 동기화 ✓' : '로컬 저장';
 
-  data.sort((a, b) => {
-    if (b.wins !== a.wins) return b.wins - a.wins;
-    return (b.lastWin || 0) - (a.lastWin || 0);
+  const agg = {};
+  CHARACTERS.forEach(c => agg[c.id] = { id: c.id, scores: [], damage: 0, lastTs: 0 });
+
+  records.forEach(r => {
+    if (r.type === 'quiz' && agg[r.char]) {
+      agg[r.char].scores.push(Number(r.score));
+      const t = typeof r.ts === 'string' ? new Date(r.ts).getTime() : r.ts;
+      if (t > agg[r.char].lastTs) agg[r.char].lastTs = t;
+    } else if (r.type === 'attack' && agg[r.target]) {
+      agg[r.target].damage += Number(r.damage);
+    }
+  });
+
+  const ranked = Object.values(agg).map(d => {
+    const games = d.scores.length;
+    const avg = games > 0 ? d.scores.reduce((a, b) => a + b, 0) / games : 0;
+    const final = avg + d.damage;
+    return {
+      id: d.id, games, avg, damage: d.damage, final, lastTs: d.lastTs,
+      qualified: games >= RANK_MIN_GAMES,
+    };
+  });
+
+  ranked.sort((a, b) => {
+    if (a.qualified !== b.qualified) return a.qualified ? -1 : 1;
+    if (b.final !== a.final) return b.final - a.final;
+    return b.lastTs - a.lastTs;
   });
 
   const list = document.getElementById('rank-list');
   list.innerHTML = '';
-
-  data.forEach((row, i) => {
+  ranked.forEach((row, i) => {
     const char = CHARACTERS.find(c => c.id === row.id);
-    if (!char) return;
     const div = document.createElement('div');
     div.className = 'rank-row';
-    if (i === 0 && row.wins > 0) div.classList.add('gold');
-    else if (i === 1 && row.wins > 0) div.classList.add('silver');
-    else if (i === 2 && row.wins > 0) div.classList.add('bronze');
+    if (!row.qualified) div.classList.add('disqualified');
+    else if (i === 0) div.classList.add('gold');
+    else if (i === 1) div.classList.add('silver');
+    else if (i === 2) div.classList.add('bronze');
 
-    const medal = ['🥇','🥈','🥉'][i] || `#${i+1}`;
-    const avatar = `<div class="rank-avatar" style="background:linear-gradient(135deg,${char.color},${char.color}88)">${char.emoji}</div>`;
+    const medal = row.qualified ? (['🥇','🥈','🥉'][i] || `#${i+1}`) : '—';
+    const finalStr = row.qualified ? row.final.toFixed(2) : '-';
+    const isNeg = row.qualified && row.final < 0;
+    const detail = row.qualified
+      ? `${row.games}게임 평균 ${row.avg.toFixed(2)} · 복수전 ${row.damage.toFixed(1)}`
+      : `${row.games}/${RANK_MIN_GAMES}게임 (기록 부족)`;
 
     div.innerHTML = `
       <div class="rank-position">${medal}</div>
-      ${avatar}
+      <div class="rank-avatar" style="background:linear-gradient(135deg,${char.color},${char.color}88)" id="rank-av-${char.id}">${char.emoji}</div>
       <div class="rank-info">
         <strong>${char.name}</strong>
-        <small>${char.style}</small>
+        <small>${detail}</small>
       </div>
-      <div class="rank-wins">${row.wins}<small>WINS</small></div>
+      <div class="rank-score ${isNeg ? 'negative' : ''}">${finalStr}<small>POINT</small></div>
     `;
     list.appendChild(div);
+
+    const img = new Image();
+    img.src = `char_${char.id}.png`;
+    img.onload = () => {
+      const av = document.getElementById(`rank-av-${char.id}`);
+      if (av) av.replaceChildren(img);
+    };
   });
 }
 
-function resetState() {
-  state.self = null;
-  state.opponent = null;
-  if (state.oppTimer) clearTimeout(state.oppTimer);
+function goBackFromRanking() {
+  if (state.self) goto('screen-mode');
+  else goto('screen-pick-self');
 }
 
-// ════════════════════════════════════════════════
-//  시작
-// ════════════════════════════════════════════════
 renderSelfGrid();
 </script>
 </body>
